@@ -18,3 +18,4 @@ production_static_files/manual/SBHS_Schematic_manual.pdf
 production_static_files/sbhsclient
 templates/admin (copy)
 .vscode
+sbhs_server/credentials.py-bkup
