@@ -1,0 +1,12 @@
+{% extends "layout.html" %}
+{% load staticfiles %}
+{% block content %}
+<div class="container">
+    <div class="row">
+        {% include "account/sub_nav.html" %}
+        <div class="span12">
+            <h2>Log File Does not exists for this profile</h2>
+        </div>
+    </div>
+</div>
+{% endblock %}

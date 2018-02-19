@@ -5,10 +5,12 @@ import MySQLdb
 import datetime
 from time import gmtime, strftime
 
-db = MySQLdb.connect(host="localhost",   	        ## your host, usually localhost ##
-                     user="root",         		## your username ##
-                     passwd="OSCAD4229", 		## your password ##
-                     db="vlabs_sbhs")     		## name of the data base ##
+from sbhs_server import credentials as credentials
+
+db = MySQLdb.connect(host=credentials.DB_HOST,   	        ## your host, usually localhost ##
+                     user=credentials.DB_USER,         		## your username ##
+                     passwd=credentials.DB_PASS, 		## your password ##
+                     db=credentials.DB_NAME)     		## name of the data base ##
 
 ## print "Opened database successfully"
 
@@ -56,14 +58,14 @@ for AccountIdFromTablesAccnt in cu2:
 
 #print RequiredMidList
 
-SuperUserMidList=[Mid for Mid in range(1,41)]
+SuperUserMidList=[Mid for Mid in range(0,41)]
 #print SuperUserMidList
 
 MidsTobeBooked=[mId for mId in SuperUserMidList if mId not in RequiredMidList]
 #print MidsTobeBooked
 
 for BookMid in range(len(MidsTobeBooked)):
-	ToInsert=[int((MidsTobeBooked[BookMid]))+40,int(SplittedTime[0])+1,(datetime.datetime.now()),(datetime.datetime.now()),(nowDate)]
+	ToInsert=[int((MidsTobeBooked[BookMid]))+1,int(SplittedTime[0])+1,(datetime.datetime.now()),(datetime.datetime.now()),(nowDate)]
 	cursor5.execute("INSERT INTO tables_booking(account_id,slot_id,created_at,updated_at,booking_date) VALUES(%s,%s,%s,%s,%s)",ToInsert)
 	db.commit() ## To update the table Changes in database ##		
 

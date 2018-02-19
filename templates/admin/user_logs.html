@@ -88,8 +88,9 @@
             </div>
         </div>
     </div>
-    <h4 id="file-count"></h4>
-    <table id="logs-table" class="table table-condensed" style="display: none;">
+
+   <h4 id="file-count"></h4>
+   <table id="logs-table" class="table table-condensed" style="display : none;">
         <thead>
             <tr>
                 <th>Sl No</th>
@@ -120,7 +121,6 @@ var endDate = "{{ nowdate }}";
     }).on('changeDate', function(ev) {
         var newDate = new Date(ev.date);
         startDate = newDate.getFullYear() + "-" + (newDate.getMonth() + 1) + "-" + newDate.getDate();
-        $(this).datepicker('hide');
     }).data('datepicker');
 
     var DP2 = $('#dp2').datepicker({
@@ -130,16 +130,15 @@ var endDate = "{{ nowdate }}";
     }).on('changeDate', function(ev) {
         var newDate = new Date(ev.date);
         endDate = newDate.getFullYear() + "-" + (newDate.getMonth() + 1) + "-" + newDate.getDate();
-        $(this).datepicker('hide');
     }).data('datepicker');
 })();
 
 function fetchFileNames() {
     var startTime = $("#start-time").val();
     var endTime = $("#end-time").val();
-    var BASE_URL = window.location.origin + "/sbhs-rpi";
+    var BASE_URl = window.location.origin + "/sbhs";
     var request = $.ajax({
-        url : BASE_URL + "/admin/rangelogs",
+        url : BASE_URl + "/admin/rangelogs",
         method : "POST",
         data : {
             "start_date" : startDate,
@@ -154,7 +153,7 @@ function fetchFileNames() {
             htmlContent = "";
             ctr=1;
             for (item of data.message) {
-                htmlContent += "<tr>" + "<td>" + ctr + "</td>" + "<td>" + item.log.split("/")[0] +"</td>" + "<td><a href='" + BASE_URL + "/admin/explogs/" + item.id + "'>" + item.log.split("/")[1] +"</a></td>" + "</tr>";
+                htmlContent += "<tr>" + "<td>" + ctr + "</td>" + "<td>" + item.log.split("/").slice(-2)[0] +"</td>" + "<td><a href='" + BASE_URl + "/admin/explogs/" + item.id + "'>" + item.log.split("/").slice(-1)[0] +"</a></td>" + "</tr>";
                 ctr+=1;
             }
             $("#file-count").html(data.message.length + " results found");

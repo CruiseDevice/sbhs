@@ -10,3 +10,11 @@ sbhs_server/RPi_data
 sbhs_server/pi-ip.json
 docs/
 mail_dump.txt
+Experiments.zip
+production_static_files/manual-old
+production_static_files/manual/C_code.c
+production_static_files/manual/sbhs-firmware.pdf
+production_static_files/manual/SBHS_Schematic_manual.pdf
+production_static_files/sbhsclient
+templates/admin (copy)
+.vscode

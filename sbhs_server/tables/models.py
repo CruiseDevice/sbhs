@@ -9,6 +9,8 @@ from django.core.exceptions import ObjectDoesNotExist
 #from yaksh.models import Profile
 # Create your models here.
 
+print 'inside model'
+
 class Board(TrashableMixin):
     """ Declaring varibales
         mid = Integer and unique
@@ -21,6 +23,7 @@ class Board(TrashableMixin):
     mid                 = models.IntegerField(unique=True)
     online              = models.BooleanField(default=True)
     temp_offline        = models.BooleanField(default=False)
+    power_status        = models.BooleanField(default=False)
 
     created_at          = models.DateTimeField(auto_now_add=True, editable=False)
     updated_at          = models.DateTimeField(auto_now=True, editable=False)
@@ -68,7 +71,7 @@ class Board(TrashableMixin):
     def image_link(self):
         """ Function to show the image obtained from webcam
         """
-        return settings.WEBCAM_STATIC_DIR + "image" + str(self.mid) + ".jpeg"
+        return settings.WEBCAM_STATIC_DIR + "image" + '0'+str(self.mid) + ".jpeg"
 
 
 class Account(TrashableMixin, AbstractBaseUser):  
@@ -270,6 +273,9 @@ class Webcam():
     def load_image(className,mid):
         
         if int(mid) :
-            command = "timeout 2s streamer -q -f jpeg -c /dev/video" + str(mid)
-            command += " -o " + settings.WEBCAM_DIR + "image" + str(mid) + ".jpeg"
+            command = "timeout 2s streamer -q -f jpeg -c /dev/video" + '0'+str(mid)
+            print 'command1', command
+            command += " -o " + settings.WEBCAM_DIR + "image" + '0'+str(mid) + ".jpeg"
+            print 'command2', command
             os.system(command)
+            

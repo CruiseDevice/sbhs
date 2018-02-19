@@ -1,8 +1,11 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from sbhs_server.tables.models import Account, Slot, Booking
+from sbhs_server.tables.models import Account, Slot, Booking, Board
 import datetime
+import serial
+# ser.close()
+ser = serial.Serial('/dev/ttyACM0')
 
 
 LIMIT = 2
@@ -52,6 +55,14 @@ def create(req):
     if slot in all_slots:
         if date_string == "CURRENT":
             Booking.objects.create(slot=slot, account=req.user, booking_date=date)
+            mid = req.user.board.mid
+            brd = Board.objects.get(mid = mid)
+            
+            m = str(mid).zfill(2)
+            ser.write(b'F'+str(m))
+            brd.power_status = not brd.power_status
+            # ser.close()
+            brd.save()
             messages.add_message(req, messages.SUCCESS, "Slot " + str(slot) + " booked successfully.")
         else:
             bookings = req.user.booking_set.select_related("slot").filter(booking_date__year=date.year,

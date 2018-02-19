@@ -85,9 +85,7 @@ def logs_folder_index(req):
     if os.path.exists('Experiments.zip'):
         os.remove('Experiments.zip')
     zipf = zipfile.ZipFile('Experiments.zip','w',zipfile.ZIP_DEFLATED)
-    path = settings.BASE_DIR + '/experiments/'
-    # path = os.path.abspath("/experiments/")
-    zipdir(path,zipf)
+    zipdir('experiments/',zipf)
     zipf.close()
     zip_file = open('Experiments.zip','r')
     response = HttpResponse(zip_file, content_type='application/force-download')
@@ -348,7 +346,6 @@ def update_allocated_mid(req):
 
 @login_required(redirect_field_name=None)
 def download_log(req, mid):
-    print 'download log'
     checkadmin(req)
     try:
         global_logfile = settings.SBHS_GLOBAL_LOG_DIR + "/" + mid + ".log"
@@ -388,11 +385,9 @@ def download_experiment_log(req, experiment_id):
         Output: HttpResponse object
     """
     checkadmin(req)
-    print 'download_experiment_log'
     try:
         experiment_data = Experiment.objects.select_related("booking", "booking__account").get(id=experiment_id)
-        # f = open(experiment_data.log, "r")
-        f = open(settings.BASE_DIR + '/experiments/' + experiment_data.log,'r')
+        f = open(experiment_data.log, "r")
         data = f.read()
         f.close()
         return HttpResponse(data, content_type='text/text')
@@ -407,91 +402,30 @@ def reset_device(req):
                 else 
                 status_code = 500 , data={error:errorMessage}
     """ 
-    checkadmin(req)
-    mid=int(req.POST.get('mid'))
+    # mid=int(req.POST.get('mid'))
+    # usb_path=settings.MID_PORT_MAP.get(mid,None)
 
-    try:
-        ip = settings.pi_ip_map.get(str(mid))
-        if ip is None:
-            return HttpResponse(json.dumps({"status_code":400, "message":"Board is offline"}), content_type="application/json")
-        url = "http://" + str(ip) + "/pi/admin/resetdevice"
-        payload = {"mid":mid}
-        r = requests.post(url , data = payload)
-        
-        return HttpResponse(r.text, content_type="application/json")
-    except Exception as e:
-        retVal={"status_code":500,"message":"Could not reset the device.."}
-        return HttpResponse(json.dumps(retVal),content_type='application/json')
+    # if usb_path is None:
+    #     retVal={"status_code":400,"message":"Invalid MID"}
+    #     return HttpResponse(json.dumps(retVal),content_type='application/json')
 
+    # #trying to connect to device
 
-@csrf_exempt
-def set_device_params(req):
-    """Sets the device parameters as per the arguments sent
-        Takes mid,fan,heat as paramter 
-        Returns status_code = 200, data={temp:temp of the device} if succesful
-                else 
-                status_code = 500 , data={error:errorMessage}
-    """ 
-    checkadmin(req)
-    mid=int(req.POST.get('mid'))
-    fan=int(req.POST.get('fan'))
-    heat=int(req.POST.get('heat'))
-    try:
-        ip = settings.pi_ip_map.get(str(mid))
-        if ip is None:
-            return HttpResponse(json.dumps({"status_code":400, "message":"Board is offline"}), content_type="application/json")
-        url = "http://" + str(ip) + "/pi/admin/setdevice"
-        payload = {"mid":mid, "fan":fan, "heat":heat}
-        r = requests.post(url , data = payload)
-        
-        return HttpResponse(r.text, content_type="application/json")
-    except Exception as e:
-        retVal={"status_code":500,"message":"Could not set the device params.."}
-        return HttpResponse(json.dumps(retVal),content_type='application/json')
+    # # check if SBHS device is connected
+    # if not os.path.exists(usb_path):
+    #     retVal={"status_code":500,"message":"Device Not connected to defined USB Port"}
+    #     return HttpResponse(json.dumps(retVal),content_type='application/json')
 
-
-@csrf_exempt
-def get_device_temp(req):
-    """Sets the device parameters as per the arguments sent
-        Takes mid,fan,heat as paramter 
-        Returns status_code = 200, data={temp:temp of the device} if succesful
-                else 
-                status_code = 500 , data={error:errorMessage}
-    """ 
-    checkadmin(req)
-    print 'inside get_device_temp function'
-    mid=int(req.POST.get('mid'))
-    print 'mid',mid
-    try:
-        ip = settings.pi_ip_map.get(str(mid))
-	print 'ip',ip
-        if ip is None:
-            return HttpResponse(json.dumps({"status_code":400, "message":"Board is offline"}), content_type="application/json")
-        url = "http://" + str(ip) + "/pi/admin/gettemp"
-        print 'url ', url
-        payload = {"mid":mid}
-	print 'payload',payload
-        r = requests.post(url , data = payload)
-        print 'r', r
-        return HttpResponse(r.text, content_type="application/json")
-    except Exception as e:
-        retVal={"status_code":500,"message":"Could not get the device temperature.."+str(e)}
-        return HttpResponse(json.dumps(retVal),content_type='application/json')
-
-
-@login_required(redirect_field_name=None)
-def automated_slot_booking(req):
-    checkadmin(req)
-    boards = Board.objects.order_by('-online').all()
-    auto = class_based_automated_slot_booking.Automated_Slot_Booking()
-
-    auto.SuperUserList()
-    auto.CurrentBookedAccount()
-    auto.BookedMidList()
-    auto.BookSlot()
-    auto.CloseDb()
-
-    switch_onn.switchOnn(sys.argv)
-    # check_future_slots.check_future_slots()
-    # switch_on_all_boards()
-    return render(req,'admin/index.html',{'boards':boards})
+    # try:
+    #     board = sbhs.Sbhs()
+    #     board.machine_id=mid
+    #     board.boardcon= serial.Serial(port=usb_path, baudrate=9600, bytesize=8, parity='N', stopbits=1, timeout=2) #orignal stopbits = 1
+    #     board.status = 1
+    #     if board.reset_board():
+    #         retVal={"status_code":200,"message":board.getTemp()}
+    #         return HttpResponse(json.dumps(retVal),content_type='application/json')
+    #     else:
+    #         retVal={"status_code":500,"message":"Could not set the parameters.Try again."}
+    #         return HttpResponse(json.dumps(retVal),content_type='application/json')
+    # except serial.serialutil.SerialException:
+    #     retVal={"status_code":500,"message":"Could not connect to the device.Try again."}

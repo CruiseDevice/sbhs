@@ -7,8 +7,16 @@ from sbhs_server.tables.models import Slot, Account, Experiment, Booking
 import json, datetime, os, time
 from django.views.decorators.csrf import csrf_exempt
 from sbhs_server import settings
+#from sbhs_server.rsyn_c import rsyn_c
+import subprocess
+import os,sys, inspect
 # Create your views here.
-# 
+#
+
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parentdir = os.path.dirname(currentdir)
+sys.path.insert(0,parentdir) 
+ 
 def check_connection(req):
     """ Checks if the connection exists or not.
         Input: req:request object.
@@ -23,6 +31,7 @@ def initial_login(req):
         Output: HttpResponse object.
     """
     username = req.POST.get("username")
+    print username
     rpi_ip = ''
     try:
         assigned_mid = Account.objects.select_related().get(username=username).board.mid
@@ -30,6 +39,7 @@ def initial_login(req):
         return HttpResponse(json.dumps({"STATUS": 400, "MESSAGE": {"IS_IP":"1","DATA":"Invalid username"}}))
             
     rpi_ip = settings.pi_ip_map.get(str(assigned_mid))
+    print rpi_ip
     if rpi_ip is None:
         return HttpResponse(json.dumps({"STATUS": 400, "MESSAGE": {"IS_IP": "1", "DATA":"Board is currently offline"}}))
 
@@ -76,6 +86,10 @@ def logs(req):
         Input: req:request object.
         Output: HttpResponse object.
     """
+    #os.system("sh /home/vlabs-sbhs/code/sbhs/sbhs_server/scan_rpis.sh")
+    #subprocess.call('/home/vlabs-sbhs/code/sbhs/sbhs_server/scan_rpis.sh',shell=True)
+    #subprocess.call(['python','/home/vlabs-sbhs/code/sbhs/sbhs_server/rsyn_c.py'])
+    #rsyn_c()
     bookings         = Booking.objects.only("id").filter(account__id=req.user.id)
     deleted_bookings = Booking.trash.only("id").filter(account__id=req.user.id)
     bookings = list(bookings) + list(deleted_bookings)
@@ -91,6 +105,7 @@ def download_log(req, experiment_id, fn):
         Input: req: request object, experiment_id: experimental id, fn: filename.
         Output: HttpResponse object
     """
+    #os.system("sh ../sbhs_server/scan_rpis.sh")
     try:
         experiment_data = Experiment.objects.select_related("booking", "booking__account").get(id=experiment_id)
         assert req.user.id == experiment_data.booking.account.id
@@ -140,3 +155,18 @@ def validate_log_file(req):
         return HttpResponse("TRUE")
     except:
         return HttpResponse("FALSE")
+
+def refresh_logs(req):
+    #os.system("sh ../sbhs_server/scan_rpis.sh")
+    #result = 'success'
+ #   rsyn_c()
+    bookings         = Booking.objects.only("id").filter(account__id=req.user.id)
+    deleted_bookings = Booking.trash.only("id").filter(account__id=req.user.id)
+    bookings = list(bookings) + list(deleted_bookings)
+    booking_ids = [b.id for b in bookings]
+    experiments = Experiment.objects.select_related("booking", "booking__slot").filter(booking_id__in=booking_ids)
+    for e in experiments:
+        e.logname = e.log.split("/")[-1]
+    return render(req, "experiment/logs.html", {"experiments": reversed(experiments)})
+
+#    return render(req,"experiment/logs.html",{})

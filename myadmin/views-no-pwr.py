@@ -1,33 +1,14 @@
 from django.shortcuts import render, redirect
-from django.http import Http404, HttpResponse
+from django.http import Http404,HttpResponse
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Count
 from django.db import connection
 from django.core.exceptions import ObjectDoesNotExist
 from sbhs_server.tables.models import Board, Booking, Slot, Experiment, Account, Webcam
-from sbhs_server import settings, sbhs
-# from sbhs_server import switch_on, switch_off
-import class_based_automated_slot_booking
-import subprocess, json, serial, os, datetime, requests, zipfile
-import sys, inspect
-import time
+from sbhs_server import settings,sbhs
+import subprocess,json,serial,os, datetime, requests
 # Create your views here.
-from time import gmtime, strftime
-import random
-import MySQLdb
-import datetime
-
-from sbhs_server import credentials as credentials
-
-currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-parentdir = os.path.dirname(currentdir)
-sys.path.insert(0,parentdir) 
-
-import switch_onn, switch_off#, check_future_slots
-# ser.close()
-ser = serial.Serial('/dev/ttyACM0')
-        
 
 def checkadmin(req):
     """ Checks for valid admin
@@ -72,43 +53,6 @@ def logs_index(req):
     date = (datetime.datetime.now()).strftime("%Y-%m-%d")
     return render(req, 'admin/user_logs.html', {"nowdate" : date})
 
-def zipdir(path, ziph):
-    # ziph is zipfile handle
-    for root, dirs, files in os.walk(path):
-            for file in files:
-                ziph.write(os.path.join(root,file))
-
-@login_required(redirect_field_name=None)
-def logs_folder_index(req):
-    checkadmin(req)
-    # pass
-    if os.path.exists('Experiments.zip'):
-        os.remove('Experiments.zip')
-    zipf = zipfile.ZipFile('Experiments.zip','w',zipfile.ZIP_DEFLATED)
-    path = settings.BASE_DIR + '/experiments/'
-    # path = os.path.abspath("/experiments/")
-    zipdir(path,zipf)
-    zipf.close()
-    zip_file = open('Experiments.zip','r')
-    response = HttpResponse(zip_file, content_type='application/force-download')
-    response['Content-Disposition'] = 'attachment; filename="%s"' % 'Experiments.zip'
-    return response
-
-@login_required(redirect_field_name=None)
-def switch_on_all_boards(req):
-    checkadmin(req)
-    boards = Board.objects.order_by('-online').all()
-    switch_onn.switchOnn(sys.argv)
-    return render(req,'admin/switch_on_all_board.html',{"boards":boards})
-
-@login_required(redirect_field_name=None)
-def switch_off_all_boards(req):
-    checkadmin(req)
-    boards = Board.objects.order_by('-online').all()
-    switch_off.switchOff(sys.argv)
-    return render(req,'admin/switch_on_all_board.html',{"boards":boards})
-
-
 @login_required(redirect_field_name=None)
 def profile(req, mid):
     checkadmin(req)
@@ -117,8 +61,7 @@ def profile(req, mid):
         f = open(filename, "r")
         f.close()
     except:
-        # raise Http404("log does not exist for this profile")
-        return render(req,'admin/log_does_not_exist.html')
+        raise Http404
 
     delta_T = 1000
     data = subprocess.check_output("tail -n %d %s" % (delta_T, filename), shell=True)
@@ -174,44 +117,18 @@ def monitor_experiment(req):
         mid = int(req.POST.get("mid"))
     except Exception as e:
         return HttpResponse(json.dumps({"status_code":400, "message":"Invalid parameters"}), content_type="application/json")
-
-    now = datetime.datetime.now()
-    current_slot_id = Slot.objects.filter(start_hour=now.hour,
-                                            start_minute__lt=now.minute,
-                                            end_minute__gt=now.minute)
-
-    current_slot_id = -1 if not current_slot_id else current_slot_id[0].id
-
     try:
-        current_booking = Booking.objects.get(slot_id=current_slot_id,
-                                                    booking_date=datetime.date.today(),
-                                                    account__board__mid=mid)
-    except Exception as e:
-        return HttpResponse(json.dumps({"status_code":400, "message":"Invalid MID"}), content_type="application/json")
-
-    try:
-        current_booking_id, current_user = current_booking.id, current_booking.account.username
-
-        logfile = Experiment.objects.filter(booking_id=current_booking_id).order_by('created_at').reverse()[0].log
-    except:
-        return HttpResponse(json.dumps({"status_code":417, "message":"Experiment hasn't started"}), content_type="application/json")
+        ip = settings.pi_ip_map.get(str(mid))
+        if ip is None:
+            return HttpResponse(json.dumps({"status_code":400, "message":"Board is offline"}), content_type="application/json")
+        url = "http://" + str(ip) + "/pi/admin/monitor"
+        payload = {"mid":mid}
+        r = requests.post(url , data = payload)
         
-    try:
-        # get last 10 lines from logs
-        stdin,stdout = os.popen2("tail -n 10 "+logfile)
-        stdin.close()
-        logs = stdout.readlines(); stdout.close()
-        screened_logs = []
-        for line in logs:
-            screened_line = " ".join(line.split()[:4]) + "\n"
-            screened_logs.append(screened_line)
-
-        logs = "".join(screened_logs)
+        return HttpResponse(r.text, content_type="application/json")
     except Exception as e:
-        return HttpResponse(json.dumps({"status_code":500, "message":"Some error occured"}), content_type="application/json")
-
-    data = {"user": current_user, "logs": logs}
-    return HttpResponse(json.dumps({"status_code":200, "message":data}), content_type="application/json")
+        retVal={"status_code":500,"message":"Could not fetch device logs.."}
+        return HttpResponse(json.dumps(retVal),content_type='application/json')
 
 @login_required(redirect_field_name=None)
 def get_allocated_mids(req):
@@ -257,6 +174,7 @@ def toggle_device_status(req):
 
     if int(mid) in current_mids:
         return HttpResponse(json.dumps({"status_code":400, "message":"Board is in use."}), content_type="application/json")
+
     try:
         brd = Board.objects.get(mid = mid)
         brd.temp_offline = not brd.temp_offline
@@ -264,62 +182,8 @@ def toggle_device_status(req):
 
         return HttpResponse(json.dumps({"status_code":200, "message":"Toggle successful"}), content_type="application/json")
     except Exception as e:
-        return HttpResponse(json.dumps({"status_code":400, "message":"Unsuccessful"}), content_type="application/json")
+        return HttpResponse(json.dumps({"status_code":500, "message":"Unsuccessful"}), content_type="application/json")
 
-@csrf_exempt
-def toggle_power_state(req):
-    checkadmin(req)
-    # print 'inside toggle_power_state'
-    try: 
-        mid = req.POST.get('mid')
-    except Exception as e:
-        return HttpResponse(json.dumps({"status_code":400, "message":"Invalid parameters"}), content_type="application/json")
-
-    try:
-        now = datetime.datetime.now()
-        # print 'now', now
-        current_slot_id = Slot.objects.filter(start_hour=now.hour,
-                                                start_minute__lt=now.minute,
-                                                end_minute__gt=now.minute)
-        # print 'currnet_slo'
-        current_slot_id = -1 if not current_slot_id else current_slot_id[0].id
-
-        current_bookings = Booking.objects.filter(slot_id=current_slot_id,
-                                                    booking_date=datetime.date.today()).select_related()
-        current_mids = list([-1]) if not current_bookings else [current_booking.account.board.mid for current_booking in current_bookings]
-    except Exception as e:
-        return HttpResponse(json.dumps({"status_code":400, "message":"Unsuccessful"}), content_type="application/json")
-
-    if int(mid) in current_mids:
-        return HttpResponse(json.dumps({"status_code":400, "message":"Board is in use."}), content_type="application/json")
-    try:
-        print 'mid', mid.strip()
-        brd = Board.objects.get(mid = mid)
-        brd.power_status = not brd.power_status
-        print ' brd.power_status ',int(brd.power_status)
-        # sys.argv = mid
-        # print 'sys.argv ',sys.argv
-        # ser = serial.Serial('/dev/ttyACM0')
-        # print switch_on.switchOn(sys.argv)
-
-        if not brd.power_status:
-            m = str(mid).zfill(2)
-            print 'N ',m
-            time.sleep(2)
-            ser.write(b'N'+str(m))
-            # switch_on.switchOn(m)
-        else:
-            m = str(mid).zfill(2)
-            print 'F ',m
-            time.sleep(2)
-            ser.write(b'F'+str(m))
-            # switch_off.switchOff(sys.argv)
-        # ser.close()
-        brd.save()
-
-        return HttpResponse(json.dumps({"status_code":200, "message":"Toggle successful"}), content_type="application/json")
-    except Exception as e:
-        return HttpResponse(json.dumps({"status_code":400, "message":"Unsuccessful"}), content_type="application/json")
 
 def user_exists(username):
     try:
@@ -348,7 +212,6 @@ def update_allocated_mid(req):
 
 @login_required(redirect_field_name=None)
 def download_log(req, mid):
-    print 'download log'
     checkadmin(req)
     try:
         global_logfile = settings.SBHS_GLOBAL_LOG_DIR + "/" + mid + ".log"
@@ -357,7 +220,7 @@ def download_log(req, mid):
         f.close()
         return HttpResponse(data, content_type='text/text')
     except:
-        return HttpResponse("Requested log file doesn't exist.")
+        return HttpResponse("Requested log file doesn't exist.Please Try in the next hour after your slot ends.")
 
 @login_required(redirect_field_name=None)
 @csrf_exempt
@@ -388,11 +251,9 @@ def download_experiment_log(req, experiment_id):
         Output: HttpResponse object
     """
     checkadmin(req)
-    print 'download_experiment_log'
     try:
         experiment_data = Experiment.objects.select_related("booking", "booking__account").get(id=experiment_id)
-        # f = open(experiment_data.log, "r")
-        f = open(settings.BASE_DIR + '/experiments/' + experiment_data.log,'r')
+        f = open(os.path.join(settings.EXPERIMENT_LOGS_DIR, experiment_data.log), "r")
         data = f.read()
         f.close()
         return HttpResponse(data, content_type='text/text')
@@ -449,7 +310,6 @@ def set_device_params(req):
         retVal={"status_code":500,"message":"Could not set the device params.."}
         return HttpResponse(json.dumps(retVal),content_type='application/json')
 
-
 @csrf_exempt
 def get_device_temp(req):
     """Sets the device parameters as per the arguments sent
@@ -459,39 +319,16 @@ def get_device_temp(req):
                 status_code = 500 , data={error:errorMessage}
     """ 
     checkadmin(req)
-    print 'inside get_device_temp function'
     mid=int(req.POST.get('mid'))
-    print 'mid',mid
     try:
         ip = settings.pi_ip_map.get(str(mid))
-	print 'ip',ip
         if ip is None:
             return HttpResponse(json.dumps({"status_code":400, "message":"Board is offline"}), content_type="application/json")
         url = "http://" + str(ip) + "/pi/admin/gettemp"
-        print 'url ', url
         payload = {"mid":mid}
-	print 'payload',payload
         r = requests.post(url , data = payload)
-        print 'r', r
+        
         return HttpResponse(r.text, content_type="application/json")
     except Exception as e:
         retVal={"status_code":500,"message":"Could not get the device temperature.."+str(e)}
         return HttpResponse(json.dumps(retVal),content_type='application/json')
-
-
-@login_required(redirect_field_name=None)
-def automated_slot_booking(req):
-    checkadmin(req)
-    boards = Board.objects.order_by('-online').all()
-    auto = class_based_automated_slot_booking.Automated_Slot_Booking()
-
-    auto.SuperUserList()
-    auto.CurrentBookedAccount()
-    auto.BookedMidList()
-    auto.BookSlot()
-    auto.CloseDb()
-
-    switch_onn.switchOnn(sys.argv)
-    # check_future_slots.check_future_slots()
-    # switch_on_all_boards()
-    return render(req,'admin/index.html',{'boards':boards})

@@ -6,6 +6,8 @@ from django.http import HttpResponse
 from myadmin.views import checkadmin
 from sbhs_server.tables.models import Board, Webcam
 
+print 'inside webcam views.py'
+
 def reload(req, mid):
     """ Refreshes the image of the SBHS
     
@@ -25,8 +27,10 @@ def show_video(req):
     board = req.user.board
 
     image_link = board.image_link()
-    mid = str(board.mid)    
-
+    mid = str(board.mid)
+    # if mid < 10:
+        # mid = '0'+str(mid)    
+    # print 'mid',mid
 #	image_link = board.image_link()
 
     return render(req, "webcam/show_video.html", {"image_link": image_link, "mid": mid})

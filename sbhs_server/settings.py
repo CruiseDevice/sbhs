@@ -14,7 +14,9 @@ import sbhs_server.credentials as credentials
 
 
 hostname = socket.gethostname()
-is_production = hostname == "vlabssbhs"
+is_production = True
+
+hostname == "vlabs-sbhs"
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
@@ -26,6 +28,8 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = credentials.PROJECT_SECRET_KEY
+
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = not is_production
@@ -40,6 +44,7 @@ ALLOWED_HOSTS = [
     "192.168.43.208",
     "192.168.43.144",
     "10.42.0.1",
+    "vlabs.iitb.ac.in",
 ]
 
 if is_production:
@@ -78,6 +83,7 @@ INSTALLED_APPS = (
     'sbhs_server.tables',
     'webcam',
     'maintenance',
+    'django_extensions',
 )
 
 MIDDLEWARE = (
@@ -132,9 +138,9 @@ USE_L10N = True
 USE_TZ = False
 
 AUTH_USER_MODEL = 'tables.Account'
-LOGIN_URL = '/sbhs-rpi/enter'
-LOGOUT_URL = '/sbhs-rpi/logout'
-SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+LOGIN_URL = '/sbhs/enter'
+LOGOUT_URL = '/sbhs/logout'
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True # Browser-length session
 CSRF_COOKIE_NAME = "pfesgbxra"
 SESSION_COOKIE_NAME = "frffvbaVq"
 
@@ -150,8 +156,8 @@ ADMIN_EMAIL=credentials.ADMIN_EMAIL
 
 
 if is_production:
-    BASE_URL = "http://vlabs.iitb.ac.in/sbhs-rpi/"
-    FORCE_SCRIPT_NAME = "/sbhs-rpi"
+    BASE_URL = "http://vlabs.iitb.ac.in/sbhs/"
+    FORCE_SCRIPT_NAME = "/sbhs"
     USE_X_FORWARDED_HOST = True
 else:
     BASE_URL = "http://127.0.0.1/"
@@ -164,7 +170,7 @@ STATICFILES_DIRS = (
 
 if is_production:
     STATIC_ROOT = os.path.join(BASE_DIR, "production_static_files")
-    STATIC_URL = 'http://vlabs.iitb.ac.in/sbhs-rpi/static/'
+    STATIC_URL = 'http://vlabs.iitb.ac.in/sbhs/static/'
 else:
     STATIC_URL = '/static/'
 

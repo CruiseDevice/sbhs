@@ -85,9 +85,7 @@ def logs_folder_index(req):
     if os.path.exists('Experiments.zip'):
         os.remove('Experiments.zip')
     zipf = zipfile.ZipFile('Experiments.zip','w',zipfile.ZIP_DEFLATED)
-    path = settings.BASE_DIR + '/experiments/'
-    # path = os.path.abspath("/experiments/")
-    zipdir(path,zipf)
+    zipdir('experiments/',zipf)
     zipf.close()
     zip_file = open('Experiments.zip','r')
     response = HttpResponse(zip_file, content_type='application/force-download')
@@ -348,7 +346,6 @@ def update_allocated_mid(req):
 
 @login_required(redirect_field_name=None)
 def download_log(req, mid):
-    print 'download log'
     checkadmin(req)
     try:
         global_logfile = settings.SBHS_GLOBAL_LOG_DIR + "/" + mid + ".log"
@@ -388,11 +385,9 @@ def download_experiment_log(req, experiment_id):
         Output: HttpResponse object
     """
     checkadmin(req)
-    print 'download_experiment_log'
     try:
         experiment_data = Experiment.objects.select_related("booking", "booking__account").get(id=experiment_id)
-        # f = open(experiment_data.log, "r")
-        f = open(settings.BASE_DIR + '/experiments/' + experiment_data.log,'r')
+        f = open(experiment_data.log, "r")
         data = f.read()
         f.close()
         return HttpResponse(data, content_type='text/text')
@@ -407,6 +402,35 @@ def reset_device(req):
                 else 
                 status_code = 500 , data={error:errorMessage}
     """ 
+    # mid=int(req.POST.get('mid'))
+    # usb_path=settings.MID_PORT_MAP.get(mid,None)
+
+    # if usb_path is None:
+    #     retVal={"status_code":400,"message":"Invalid MID"}
+    #     return HttpResponse(json.dumps(retVal),content_type='application/json')
+
+    # #trying to connect to device
+
+    # # check if SBHS device is connected
+    # if not os.path.exists(usb_path):
+    #     retVal={"status_code":500,"message":"Device Not connected to defined USB Port"}
+    #     return HttpResponse(json.dumps(retVal),content_type='application/json')
+
+    # try:
+    #     board = sbhs.Sbhs()
+    #     board.machine_id=mid
+    #     board.boardcon= serial.Serial(port=usb_path, baudrate=9600, bytesize=8, parity='N', stopbits=1, timeout=2) #orignal stopbits = 1
+    #     board.status = 1
+    #     if board.reset_board():
+    #         retVal={"status_code":200,"message":board.getTemp()}
+    #         return HttpResponse(json.dumps(retVal),content_type='application/json')
+    #     else:
+    #         retVal={"status_code":500,"message":"Could not set the parameters.Try again."}
+    #         return HttpResponse(json.dumps(retVal),content_type='application/json')
+    # except serial.serialutil.SerialException:
+    #     retVal={"status_code":500,"message":"Could not connect to the device.Try again."}
+    #     return HttpResponse(json.dumps(retVal),content_type='application/json')
+
     checkadmin(req)
     mid=int(req.POST.get('mid'))
 
@@ -432,6 +456,37 @@ def set_device_params(req):
                 else 
                 status_code = 500 , data={error:errorMessage}
     """ 
+    # mid=int(req.POST.get('mid'))
+    # fan=int(req.POST.get('fan'))
+    # heat=int(req.POST.get('heat'))
+    # usb_path=settings.MID_PORT_MAP.get(mid,None)
+
+    # if usb_path is None:
+    #     retVal={"status_code":400,"message":"Invalid MID"}
+    #     return HttpResponse(json.dumps(retVal),content_type='application/json')
+
+    # #trying to connect to device
+
+    # # check if SBHS device is connected
+    # if not os.path.exists(usb_path):
+    #     retVal={"status_code":500,"message":"Device Not connected to defined USB Port"}
+    #     return HttpResponse(json.dumps(retVal),content_type='application/json')
+
+    # try:
+    #     board = sbhs.Sbhs()
+    #     board.machine_id=mid
+    #     board.boardcon= serial.Serial(port=usb_path, baudrate=9600, bytesize=8, parity='N', stopbits=1, timeout=2) #orignal stopbits = 1
+    #     board.status = 1
+    #     if board.setFan(fan) and board.setHeat(heat):
+    #         retVal={"status_code":200,"message":board.getTemp()}
+    #         return HttpResponse(json.dumps(retVal),content_type='application/json')
+    #     else:
+    #         retVal={"status_code":500,"message":"Could not set the parameters.Try again."}
+    #         return HttpResponse(json.dumps(retVal),content_type='application/json')
+    # except serial.serialutil.SerialException:
+    #     retVal={"status_code":500,"message":"Could not connect to the device.Try again."}
+    #     return HttpResponse(json.dumps(retVal),content_type='application/json')
+
     checkadmin(req)
     mid=int(req.POST.get('mid'))
     fan=int(req.POST.get('fan'))
@@ -458,6 +513,36 @@ def get_device_temp(req):
                 else 
                 status_code = 500 , data={error:errorMessage}
     """ 
+    # mid=int(req.POST.get('mid'))
+    # usb_path=settings.MID_PORT_MAP.get(mid,None)
+
+    # if usb_path is None:
+    #     retVal={"status_code":400,"message":"Invalid MID"}
+    #     return HttpResponse(json.dumps(retVal),content_type='application/json')
+
+    # #trying to connect to device
+
+    # # check if SBHS device is connected
+    # if not os.path.exists(usb_path):
+    #     retVal={"status_code":500,"message":"Device Not connected to defined USB Port"}
+    #     return HttpResponse(json.dumps(retVal),content_type='application/json')
+
+    # try:
+    #     board = sbhs.Sbhs()
+    #     board.machine_id=mid
+    #     board.boardcon= serial.Serial(port=usb_path, baudrate=9600, bytesize=8, parity='N', stopbits=1, timeout=2) #orignal stopbits = 1
+    #     board.status = 1
+    #     temp=board.getTemp()
+    #     if temp!=0.0:
+    #         retVal={"status_code":200,"message":temp}
+    #         return HttpResponse(json.dumps(retVal),content_type='application/json')
+    #     else:
+    #         retVal={"status_code":500,"message":"Could not set the parameters.Try again."}
+    #         return HttpResponse(json.dumps(retVal),content_type='application/json')
+    # except serial.serialutil.SerialException:
+    #     retVal={"status_code":500,"message":"Could not connect to the device.Try again."}
+    #     return HttpResponse(json.dumps(retVal),content_type='application/json')
+
     checkadmin(req)
     print 'inside get_device_temp function'
     mid=int(req.POST.get('mid'))
@@ -483,13 +568,97 @@ def get_device_temp(req):
 def automated_slot_booking(req):
     checkadmin(req)
     boards = Board.objects.order_by('-online').all()
+    # db = MySQLdb.connect(host='localhost',   	        ## your host, usually localhost ##
+    #                  user='root',         		## your username ##
+    #                  passwd='fossee@iitb', 		## your password ##
+    #                  db='sbhs')     		## name of the data base ##
     auto = class_based_automated_slot_booking.Automated_Slot_Booking()
+    # cu1 = auto.cu1
+    # cu2 = auto.cu2
+    # db = auto.db
+    # cursor5 = auto.cursor5
+    # nowDate = auto.nowDate
+    # nowTime = auto.nowTime
+    # SplittedTime = auto.SplittedTime
+    # NowdaTe = auto.NowdaTe
+    # CurrentAccountIdList = auto.CurrentAccountIdList
+    # BookedSlotId = auto.BookedMidList
+    # RequiredMidList = auto.RequiredMidList
+    # SuperUserMidList = auto.SuperUserMidList
 
     auto.SuperUserList()
     auto.CurrentBookedAccount()
     auto.BookedMidList()
     auto.BookSlot()
     auto.CloseDb()
+    ## print "Opened database successfully"
+
+    ## Execution of querry
+    # cursor5=db.cursor()
+    # cu1=db.cursor()
+    # querry1='SELECT * FROM tables_booking'
+    # cu1.execute(querry1)
+
+    # ## Datetime used when script runs
+    # nowDate=datetime.datetime.now().date()
+    # nowTime=str(datetime.datetime.now().time())
+    # SplittedTime=nowTime.split(":")
+    # NowdaTe=str(nowDate)
+    # NowdaTe=NowdaTe.strip()   ## To remove extra spaces strip is used##
+
+
+    # CurrentAccountIdList=[]
+    # BookedSlotId=[]
+
+    # for DateTimeInBooking in cu1:
+    #     nn=str(DateTimeInBooking[6])
+    #     daTe = nn[0:11]
+    #     tiMe=nn[11:13]
+    #     daTe=daTe.strip()
+        
+    #     if daTe==NowdaTe and int(SplittedTime[0])+1==int(DateTimeInBooking[3]):
+    #         CurrentAccountIdList.append(int(DateTimeInBooking[2]))
+    #         BookedSlotId.append(int(DateTimeInBooking[3]))
+    # #print BookedSlotId,CurrentAccountIdList
+
+
+    # querry2='SELECT *FROM tables_account'
+    # cu2=db.cursor()
+    # cu2.execute(querry2)
+
+
+    # RequiredMidList=[]
+    # for AccountIdFromTablesAccnt in cu2:
+    #     var=AccountIdFromTablesAccnt[0]
+        
+    #     for Id in range(len(CurrentAccountIdList)):
+    #         if long(CurrentAccountIdList[Id])==(AccountIdFromTablesAccnt[0]):
+    #             RequiredMidList.append(int(AccountIdFromTablesAccnt[9]))
+
+    # #print RequiredMidList
+
+    # SuperUserMidList=[Mid for Mid in range(1,41)]
+    # #print SuperUserMidList
+
+    # MidsTobeBooked=[mId for mId in SuperUserMidList if mId not in RequiredMidList]
+    # #print MidsTobeBooked
+
+    # for BookMid in range(len(MidsTobeBooked)):
+    #     ToInsert=[int((MidsTobeBooked[BookMid]))+40,int(SplittedTime[0])+1,(datetime.datetime.now()),(datetime.datetime.now()),(nowDate)]
+    #     try:
+    #         cursor5.execute("INSERT INTO tables_booking(account_id,slot_id,created_at,updated_at,booking_date) VALUES(%s,%s,%s,%s,%s)",ToInsert)
+    #     except:
+    #         pass
+    #     db.commit() ## To update the table Changes in database ##		
+
+    
+
+    # ## Closing all the object of Cursor
+    # cu1.close() 
+    # cu2.close()
+    # cursor5.close()
+    # db.close()
+    # ## print "database closed successfully"
 
     switch_onn.switchOnn(sys.argv)
     # check_future_slots.check_future_slots()
