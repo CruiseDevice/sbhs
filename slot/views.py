@@ -5,7 +5,7 @@ from sbhs_server.tables.models import Account, Slot, Booking, Board
 import datetime
 import serial
 # ser.close()
-ser = serial.Serial('/dev/ttyACM0')
+ser = serial.Serial('/dev/ttyUSB0')
 
 
 LIMIT = 2

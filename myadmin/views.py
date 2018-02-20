@@ -26,7 +26,7 @@ sys.path.insert(0,parentdir)
 
 import switch_onn, switch_off#, check_future_slots
 # ser.close()
-ser = serial.Serial('/dev/ttyACM0')
+ser = serial.Serial('/dev/ttyUSB0')
         
 
 def checkadmin(req):

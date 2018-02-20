@@ -13,7 +13,7 @@ import os
 # except:
 #     pass
 
-ser = serial.Serial('/dev/ttyACM0')
+ser = serial.Serial('/dev/ttyUSB0')
 def switchOnn(args):    
     try:
         for i in range(1,17):

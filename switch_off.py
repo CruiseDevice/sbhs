@@ -3,7 +3,7 @@ import time
 import sys
 import os
 
-ser = serial.Serial('/dev/ttyACM0')
+ser = serial.Serial('/dev/ttyUSB0')
         
 def switchOff(args):
     try:

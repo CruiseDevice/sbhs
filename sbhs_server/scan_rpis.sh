@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd sbhs_server 
+#cd sbhs_server 
 
 mkdir -p RPi_data
 mkdir -p RPi_data/map RPi_data/report
