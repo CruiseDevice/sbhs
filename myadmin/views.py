@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from django.http import Http404, HttpResponse
+from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Count
@@ -7,6 +7,7 @@ from django.db import connection
 from django.core.exceptions import ObjectDoesNotExist
 from sbhs_server.tables.models import Board, Booking, Slot, Experiment, Account, Webcam
 from sbhs_server import settings, sbhs
+from django.urls import reverse
 # from sbhs_server import switch_on, switch_off
 import class_based_automated_slot_booking
 import subprocess, json, serial, os, datetime, requests, zipfile
@@ -43,7 +44,7 @@ def checkadmin(req):
 def index(req):
     checkadmin(req)
     boards = Board.objects.order_by('-online').all()
-    allotment_mode = "Random" if Board.can_do_random_allotment() else "Workshop"
+    allotment_mode = "Random" if  Board.can_do_random_allotment() else "Workshop"
     return render(req, 'admin/index.html', {"boards": boards, "allotment_mode": allotment_mode})
 
 @login_required(redirect_field_name=None)
@@ -99,15 +100,16 @@ def switch_on_all_boards(req):
     checkadmin(req)
     boards = Board.objects.order_by('-online').all()
     switch_onn.switchOnn(sys.argv)
-    return render(req,'admin/switch_on_all_board.html',{"boards":boards})
+    # return render(req,'admin/switch_on_all_board.html',{"boards":boards})
+    return HttpResponseRedirect(reverse('admin_index'))
 
 @login_required(redirect_field_name=None)
 def switch_off_all_boards(req):
     checkadmin(req)
     boards = Board.objects.order_by('-online').all()
     switch_off.switchOff(sys.argv)
-    return render(req,'admin/switch_on_all_board.html',{"boards":boards})
-
+    # return render(req,'admin/switch_on_all_board.html',{"boards":boards})
+    return HttpResponseRedirect(reverse('admin_index'))
 
 @login_required(redirect_field_name=None)
 def profile(req, mid):
@@ -494,4 +496,5 @@ def automated_slot_booking(req):
     switch_onn.switchOnn(sys.argv)
     # check_future_slots.check_future_slots()
     # switch_on_all_boards()
-    return render(req,'admin/index.html',{'boards':boards})
+    # return render(req,'admin/index.html',{'boards':boards})
+    return HttpResponseRedirect(reverse('admin_index'))
