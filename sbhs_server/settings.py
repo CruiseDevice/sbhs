@@ -246,7 +246,7 @@ WEBCAM_STATIC_DIR = 'img/webcam/'
 if not is_production:
     SBHS_ADMINS = (
         ('Rupak Rokade' , '+91-9960447251' , 'rupakrokade@gmail.com'),
-        ('Akash Chavan' , '+91-8007895970' , 'meakashchavan@gmail.com')
+        ('Akash Chavan' , '+91-9087654321' , 'iakashchavan@iitb.ac.in')
     )
 else:
     from sbhs_server.sbhs_admin_config import SBHS_ADMINS
