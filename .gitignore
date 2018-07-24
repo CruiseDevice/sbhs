@@ -20,3 +20,4 @@ templates/admin (copy)
 .vscode
 sbhs_server/credentials.py-bkup
 error_bash.txt
+new.csv
