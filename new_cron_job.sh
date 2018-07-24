@@ -11,8 +11,9 @@ killall streamer
 source ../venv/bin/activate
 #source ./bin/activate
 #python sbhs_server/scan_machines.py
-#python switch_onn.py 
-sleep 120
+python switch_onn.py 
+sh synctime.sh
+sleep 12
 bash sbhs_server/scan_rpis.sh
 python manage.py send_report
 #python offline_reconnect.py
@@ -21,7 +22,7 @@ python manage.py migrate
 python manage.py generate_checksum
 touch index.wsgi
 python manage.py log_generator
-# python check_future_slots.py
+python check_future_slots.py
 #python log_generator.py
 date > date.txt
 sleep 2
