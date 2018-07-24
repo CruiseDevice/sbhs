@@ -3,17 +3,15 @@ import time
 import sys
 import os
 
-ser = serial.Serial('/dev/ttyUSB0')
+ser = serial.Serial('/dev/ttyACM0')
         
 def switchOff(args):
     try:
         # it takes some time to initiate the port, add a sleep of 2 seconds.
         for i in range(1,17):
-            time.sleep(1)  
+            time.sleep(2)  
             arg = str(i).zfill(2)
-            # a = arg.split(' ')
-            # print 'a=',a[]
-            # return arg
+            print 'N'+arg
             ser.write(b'N'+arg)
         # ser.close()
     except:

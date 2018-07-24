@@ -3,23 +3,15 @@ import serial
 import time
 import os
 
-# os.environ.setdefault('DJANGO_SETTINGS_MODULE','sbhs_server.settings')
-
-# import django
-# django.setup()
-
-# try:
-#     ser.close()
-# except:
-#     pass
-
-ser = serial.Serial('/dev/ttyUSB0')
+ser = serial.Serial('/dev/ttyACM0')
 def switchOnn(args):    
     try:
         for i in range(1,17):
-            time.sleep(1)
+            time.sleep(2)
             arg = str(i).zfill(2)
+            print arg
             ser.write(b'F'+arg)
+            
         # ser.close()
     except:
         print 'Error: Cannot connect to device ',args
