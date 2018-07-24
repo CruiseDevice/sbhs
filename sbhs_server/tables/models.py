@@ -51,13 +51,14 @@ class Board(TrashableMixin):
             board_num = random.randrange(online_boards_count)
             return settings.online_mids[board_num]
         else:
-            online_boards = sorted(settings.online_mids)
+	    online_boards = [int(x) for x in settings.online_mids]
+            online_boards = sorted(online_boards)
 
             # When the account table is empty, allocate first board 
             try:
                 last_allocated_MID = Account.objects.select_related().order_by("-id")[0].board.mid;
                 for o in online_boards:
-                    if o > last_allocated_MID:
+                    if int(o) > last_allocated_MID:
                         return Board.objects.get(mid=o).id
             except Exception as e:
                 pass
