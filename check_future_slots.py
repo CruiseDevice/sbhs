@@ -14,7 +14,7 @@ django.setup()
 from sbhs_server.tables.models import Booking, Account, Board
 
 # ser.close()
-ser = serial.Serial('/dev/ttyUSB0')
+ser = serial.Serial('/dev/ttyACM0')
 
 def switch_on(b_id, booking_Date, nowhour,slot_id):
     if datetime.now().date() == booking_Date: #This must be booking date:
